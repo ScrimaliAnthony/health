@@ -21,7 +21,7 @@ function connectGoogle() {
       }
 
       // C'est ici que nous appelons notre fonction !
-      readGoogleSheet(response.access_token);
+      writeGoogleSheet(response.access_token);
     },
   });
 
@@ -52,6 +52,44 @@ async function readGoogleSheet(accessToken: string) {
     console.log("Données Google Sheets :", data);
   } catch (error) {
     console.error("Erreur de lecture :", error);
+  }
+}
+
+async function writeGoogleSheet(accessToken: string) {
+  const spreadsheetId = import.meta.env.VITE_GOOGLE_SPREADSHEET_ID;
+  const range = encodeURIComponent("'Feuille 1'!A:D");
+
+  const url =
+    `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}:append` +
+    "?valueInputOption=RAW&insertDataOption=INSERT_ROWS";
+
+  const values = [
+    ["2026-11-09", 82.5, "Test depuis React", "Question de test"],
+  ];
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        majorDimension: "ROWS",
+        values,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error("Erreur Google Sheets :", error);
+      return;
+    }
+
+    const data = await response.json();
+    console.log("Écriture réussie :", data);
+  } catch (error) {
+    console.error("Erreur d'écriture :", error);
   }
 }
 
